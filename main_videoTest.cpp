@@ -2,10 +2,7 @@
 #include "std_tlr.h"
 #include "math_utils.h"
 
-//Size Win_vertical(10,20),block_vertical(5,10),blockStride_vertical(5,5),cell_vertical(5,5);
 Size Win_vertical(15,30),block_vertical(5,10),blockStride_vertical(5,5),cell_vertical(5,5);
-//HOGDescriptor myHOG_vertical(Size(15,30),Size(5,10),Size(5,5),Size(5,5),9,1,-1.0,0,0.2,true,10);
-//HOGDescriptor myHOG_horz(Size(30,15),Size(10,5),Size(5,5),Size(5,5),9,1,-1.0,0,0.2,true,10);
 HOGDescriptor myHOG_vertical(Win_vertical,block_vertical,blockStride_vertical,cell_vertical,9,1,-1.0,0,0.2,true,64);
 HOGDescriptor myHOG_horz(Size(36,12),Size(12,6),Size(6,6),Size(6,6),9,1,-1.0,0,0.2,true,64);
 vector<Rect> found_filtered;
@@ -136,7 +133,7 @@ void nhsSpaceTest()
 	Mat src,re_src;
 	VideoCapture capture; 
 	//capture.open("D:\\JY\\JY_TrainingSamples\\TrafficSignVideo\\trafficSign6.avi");
-	capture.open("D:\\JY\\JY_TrainingSamples\\camera_clip1.avi");
+	capture.open("D:\\JY\\JY_TrainingSamples\\r+g.mp4");
 	while(capture.read(src))
 	{
 		resize(src,re_src,Size(640,480));

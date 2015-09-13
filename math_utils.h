@@ -25,8 +25,8 @@
 #define R_SAT_MIN 25
 
 // The values for the green colour.
-#define G_HUE_MAX 134
-#define G_HUE_MIN 100
+#define G_HUE_MAX 149
+#define G_HUE_MIN 85
 #define G_SAT_MIN 20
 
 // The values for the blue colour.
