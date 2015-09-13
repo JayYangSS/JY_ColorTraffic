@@ -1,5 +1,6 @@
 
 #include "std_tlr.h"
+#include "math_utils.h"
 
 //Size Win_vertical(10,20),block_vertical(5,10),blockStride_vertical(5,5),cell_vertical(5,5);
 Size Win_vertical(15,30),block_vertical(5,10),blockStride_vertical(5,5),cell_vertical(5,5);
@@ -16,7 +17,7 @@ void On_Change(int n)
 {
 	cvSetCaptureProperty(capture,CV_CAP_PROP_POS_FRAMES,n);
 }
-
+void nhsSpaceTest();
 
 int main()
 {
@@ -71,16 +72,16 @@ int main()
    system("pause");
 
 #else
-	IplImage *frame = NULL,*imageSeg=NULL,*imageNoiseRem =NULL;
+	/*IplImage *frame = NULL,*imageSeg=NULL,*imageNoiseRem =NULL;
 	IplImage *resize_tmp=cvCreateImage(Size(800,600),8,3);
 	CvVideoWriter *writer=NULL;
 	int isColor=1;
 	int fps=10;
 	int a[2]={0,0};
-
+ 
 	
 	writer=cvCreateVideoWriter("out3.avi",CV_FOURCC('X','V','I','D'),fps,Size(800,600),isColor);
-	capture = cvCreateFileCapture("D:\\JY\\JY_TrainingSamples\\huanhu_clip2.avi");
+	capture = cvCreateFileCapture("D:\\JY\\JY_TrainingSamples\\camera_clip1.avi");
 	int frameFPS=cvGetCaptureProperty(capture,CV_CAP_PROP_FPS);
 	int frameNUM=cvGetCaptureProperty(capture,CV_CAP_PROP_FRAME_COUNT);
 	char Info[200];
@@ -123,7 +124,41 @@ int main()
 	cvDestroyAllWindows();
 	cvReleaseCapture(&capture);
 	cvReleaseImage(&resize_tmp);
-	cvReleaseVideoWriter(&writer);
+	cvReleaseVideoWriter(&writer);*/
+	nhsSpaceTest();
 #endif
    return 0;
+}
+
+//将颜色提取部分换为使用nhs颜色空间，这样可以和标志牌使用同样的颜色空间，整合到一起
+void nhsSpaceTest()
+{
+	Mat src,re_src;
+	VideoCapture capture; 
+	//capture.open("D:\\JY\\JY_TrainingSamples\\TrafficSignVideo\\trafficSign6.avi");
+	capture.open("D:\\JY\\JY_TrainingSamples\\camera_clip1.avi");
+	while(capture.read(src))
+	{
+		resize(src,re_src,Size(640,480));
+		Mat ihls_image = convert_rgb_to_ihls(re_src);
+		imshow("re_src",re_src);
+		waitKey(5);
+		//对不同颜色进行NHS颜色空间的二值图像获取
+		for (int mode=0;mode<4;mode++)
+		{
+
+			Mat nhs_image = convert_ihls_to_nhs(ihls_image,mode);//0:yellow,1:blue,2:red
+			Mat noiseremove;
+			//分别显示黄蓝红色的nhs二值图像 
+			stringstream ss;
+			string index;
+			ss<<mode;
+			ss>>index;
+			string tmp="nhs_image"+index;
+			//滤波
+			medianBlur(nhs_image,noiseremove,3);
+			imshow(tmp,noiseremove);
+			waitKey(5);
+		}
+	}
 }
