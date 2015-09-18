@@ -130,6 +130,8 @@ int main()
 	cvReleaseVideoWriter(&writer);*/
 	//testSocket();
 	testCamera();
+	cvReleaseMat(&g_mat);
+	system("pause");
 #endif
    return 0;
 }
@@ -157,6 +159,9 @@ void testCamera()
 
 
 		found_filtered.clear();
+		//±£¥Ê ”∆µ
+		cvWriteFrame(writer,frame); 
+
 		cvResize(frame,resize_tmp);
 		imageSeg = colorSegmentation(resize_tmp);
 		cvShowImage("imgseg",imageSeg);
@@ -180,13 +185,12 @@ void testCamera()
 		if (c==27)
 		{
 			p.ClearBuffer();
+			cvReleaseImage(&resize_tmp);
 			cvReleaseVideoWriter(&writer); 
 			break;
 		}
 	}
 	cvDestroyAllWindows();
-	cvReleaseImage(&resize_tmp);
-	cvReleaseVideoWriter(&writer);
 }
 
 void testSocket()
