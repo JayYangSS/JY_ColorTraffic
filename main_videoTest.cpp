@@ -1,12 +1,12 @@
-
 #include "std_tlr.h"
+#include "socket_server_task.h"
+#include "Drogonfly_ImgRead.h"
 
-//Size Win_vertical(10,20),block_vertical(5,10),blockStride_vertical(5,5),cell_vertical(5,5);
 Size Win_vertical(15,30),block_vertical(5,10),blockStride_vertical(5,5),cell_vertical(5,5);
-//HOGDescriptor myHOG_vertical(Size(15,30),Size(5,10),Size(5,5),Size(5,5),9,1,-1.0,0,0.2,true,10);
-//HOGDescriptor myHOG_horz(Size(30,15),Size(10,5),Size(5,5),Size(5,5),9,1,-1.0,0,0.2,true,10);
 HOGDescriptor myHOG_vertical(Win_vertical,block_vertical,blockStride_vertical,cell_vertical,9,1,-1.0,0,0.2,true,64);
 HOGDescriptor myHOG_horz(Size(36,12),Size(12,6),Size(6,6),Size(6,6),9,1,-1.0,0,0.2,true,64);
+void testSocket();
+void testCamera();
 vector<Rect> found_filtered;
 bool TRAIN=false;
 bool HORZ=false;
@@ -20,6 +20,10 @@ void On_Change(int n)
 
 int main()
 {
+	//socket通信
+	SocketInit();
+	g_mat = cvCreateMat(2, 1, CV_32FC1);//用于传输数据
+	
 	CvFont font; 
 	cvInitFont(&font,CV_FONT_HERSHEY_SIMPLEX, .5, .5, 0, 1, 8);
 	if(HORZ)
@@ -71,7 +75,7 @@ int main()
    system("pause");
 
 #else
-	IplImage *frame = NULL,*imageSeg=NULL,*imageNoiseRem =NULL;
+	/*IplImage *frame = NULL,*imageSeg=NULL,*imageNoiseRem =NULL;
 	IplImage *resize_tmp=cvCreateImage(Size(800,600),8,3);
 	CvVideoWriter *writer=NULL;
 	int isColor=1;
@@ -123,7 +127,135 @@ int main()
 	cvDestroyAllWindows();
 	cvReleaseCapture(&capture);
 	cvReleaseImage(&resize_tmp);
-	cvReleaseVideoWriter(&writer);
+	cvReleaseVideoWriter(&writer);*/
+	//testSocket();
+	testCamera();
 #endif
    return 0;
+}
+
+void testCamera()
+{
+	//摄像头相关初始化
+	CvVideoWriter *writer=NULL;
+	bool saveFlag=true;
+	Drogonfly_ImgRead p;
+	IplImage *frame = NULL,*imageSeg=NULL,*imageNoiseRem =NULL;
+	IplImage *resize_tmp=cvCreateImage(Size(800,600),8,3);
+	p.Camera_Intial();
+	int a[2]={0,0};
+
+	while(1)
+	{
+		frame=p.Camera2IplImage();
+		if(saveFlag)
+		{
+			writer = cvCreateVideoWriter("testCamera1.avi",CV_FOURCC('X','V','I','D'),10,cvGetSize(resize_tmp),1);
+			saveFlag=false;
+		}
+		if(!frame)break;
+
+
+		found_filtered.clear();
+		cvResize(frame,resize_tmp);
+		imageSeg = colorSegmentation(resize_tmp);
+		cvShowImage("imgseg",imageSeg);
+		cvWaitKey(5);
+		imageNoiseRem=noiseRemoval(imageSeg);
+		componentExtraction(imageSeg,resize_tmp,a);
+
+
+		//socket通信
+		if (!gb_filled)
+		{
+			*(float *)CV_MAT_ELEM_PTR(*g_mat, 0, 0) = (float)getTickCount();
+			if(a[0]>0)//red light
+				*(float *)CV_MAT_ELEM_PTR(*g_mat, 1, 0) = 9.0;
+			if(a[1]>0)//greed light
+				*(float *)CV_MAT_ELEM_PTR(*g_mat, 1, 0) = 10.0;
+			gb_filled = true;
+		}
+		//如果退出，做相关的清除工作
+		int c=cvWaitKey(1);
+		if (c==27)
+		{
+			p.ClearBuffer();
+			cvReleaseVideoWriter(&writer); 
+			break;
+		}
+	}
+	cvDestroyAllWindows();
+	cvReleaseImage(&resize_tmp);
+	cvReleaseVideoWriter(&writer);
+}
+
+void testSocket()
+{
+	//测试视频相关
+	IplImage *frame = NULL,*imageSeg=NULL,*imageNoiseRem =NULL;
+	IplImage *resize_tmp=cvCreateImage(Size(800,600),8,3);
+	CvVideoWriter *writer=NULL;
+	int isColor=1;
+	int fps=10;
+	int a[2]={0,0};
+
+	capture = cvCreateFileCapture("D:\\JY\\JY_TrainingSamples\\huanhu_clip2.avi");
+	int frameFPS=cvGetCaptureProperty(capture,CV_CAP_PROP_FPS);
+	int frameNUM=cvGetCaptureProperty(capture,CV_CAP_PROP_FRAME_COUNT);
+	char Info[200];
+	cvNamedWindow("resize_frame");
+	cvCreateTrackbar("frame","resize_frame",&Frame_pos,frameNUM,On_Change);
+
+	while (1)
+	{
+		CvFont font; 
+		cvInitFont(&font,CV_FONT_HERSHEY_SIMPLEX, .5, .5, 0, 1, 8);
+		
+		int Start=cvGetTickCount();
+		frame = cvQueryFrame(capture);
+		if(!frame)break;
+
+
+		found_filtered.clear();
+		cvResize(frame,resize_tmp);
+		imageSeg = colorSegmentation(resize_tmp);
+		cvShowImage("imgseg",imageSeg);
+		cvWaitKey(5);
+		imageNoiseRem=noiseRemoval(imageSeg);
+		componentExtraction(imageSeg,resize_tmp,a);
+
+
+		//socket通信
+		if (!gb_filled)
+		{
+			*(float *)CV_MAT_ELEM_PTR(*g_mat, 0, 0) = (float)getTickCount();
+			if(a[0]>0)//red light
+				*(float *)CV_MAT_ELEM_PTR(*g_mat, 1, 0) = 9.0;
+			if(a[1]>0)//greed light
+				*(float *)CV_MAT_ELEM_PTR(*g_mat, 1, 0) = 10.0;
+			gb_filled = true;
+		}
+
+		int currentFrame=cvGetCaptureProperty(capture,CV_CAP_PROP_POS_FRAMES);
+		sprintf(Info,"Total frames:%d,current frame:%d",frameNUM,currentFrame);
+		cvRectangle(resize_tmp,Point(0,0),Point(resize_tmp->width,25),Scalar(0,0,0),CV_FILLED);
+		cvPutText(resize_tmp,Info,Point(25,17),&font,Scalar(255,255,255));
+
+
+		cvShowImage("resize_frame",resize_tmp);
+		cvWaitKey(5);
+		cvWriteFrame(writer,resize_tmp);
+		cvReleaseImage(&imageSeg);
+		cvReleaseImage(&imageNoiseRem);
+		cout << "Frame Grabbed." << endl;
+		int End=cvGetTickCount();
+		float time=(float)(End-Start)/(cvGetTickFrequency()*1000000);
+		cout<<"Time："<<time<<endl;
+
+
+	}
+	cvDestroyAllWindows();
+	cvReleaseCapture(&capture);
+	cvReleaseImage(&resize_tmp);
+	cvReleaseVideoWriter(&writer);
 }
