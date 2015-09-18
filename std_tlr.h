@@ -53,11 +53,11 @@
 
 
 //int* test_HSV(IplImage* inputImage);
-void detectBox(IplImage *GrayImage);
+//void detectBox(IplImage *GrayImage);
 void rgb2hsi(int red, int green, int blue, int& hue, int& saturation, int& intensity );
-IplImage* HistoEqualize(IplImage* InputImg);
+//IplImage* HistoEqualize(IplImage* InputImg);
 IplImage* HSV_view(IplImage* inputImage,int flagHSV);
-IplImage* Gauss_colorSeg(IplImage* inputImage);
+//IplImage* Gauss_colorSeg(IplImage* inputImage);
 IplImage* colorSegmentation(IplImage* inputImage);
 //void colorSegmentation(IplImage* inputImage,IplImage *imageSeg);
 IplImage* topHatExtraction(IplImage* inputImage);
