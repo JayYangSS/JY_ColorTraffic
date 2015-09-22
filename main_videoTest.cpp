@@ -159,16 +159,19 @@ void testCamera()
 
 
 		found_filtered.clear();
-		//保存视频
-		cvWriteFrame(writer,frame); 
-
 		cvResize(frame,resize_tmp);
+		//保存视频
+#if SAVEVIDEO
+		cvWriteFrame(writer,resize_tmp);
+#endif
+		
 		imageSeg = colorSegmentation(resize_tmp);
 		cvShowImage("imgseg",imageSeg);
 		cvWaitKey(5);
 		imageNoiseRem=noiseRemoval(imageSeg);
 		componentExtraction(imageSeg,resize_tmp,a);
-
+		cvShowImage("resize_frame",resize_tmp);
+		cvWaitKey(5);
 
 		//socket通信
 		if (!gb_filled)
@@ -181,7 +184,7 @@ void testCamera()
 			gb_filled = true;
 		}
 		//如果退出，做相关的清除工作
-		int c=cvWaitKey(1);
+		int c=cvWaitKey(5);
 		if (c==27)
 		{
 			p.ClearBuffer();
@@ -242,7 +245,7 @@ void testSocket()
 
 		int currentFrame=cvGetCaptureProperty(capture,CV_CAP_PROP_POS_FRAMES);
 		sprintf(Info,"Total frames:%d,current frame:%d",frameNUM,currentFrame);
-		cvRectangle(resize_tmp,Point(0,0),Point(resize_tmp->width,25),Scalar(0,0,0),CV_FILLED);
+		//cvRectangle(resize_tmp,Point(0,0),Point(resize_tmp->width,25),Scalar(0,0,0),CV_FILLED);
 		cvPutText(resize_tmp,Info,Point(25,17),&font,Scalar(255,255,255));
 
 

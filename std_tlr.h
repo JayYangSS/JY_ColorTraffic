@@ -37,11 +37,10 @@
 
 #include <string>
 
-
+#define SAVEVIDEO 1
 #define TEST 0
 
 #define PI 3.1415
-
 #define GREEN_PIXEL_LABEL 255
 #define RED_PIXEL_LABEL 128
 #define NON_BLOB_PIXEL_LABEL 0
